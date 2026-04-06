@@ -1,0 +1,28 @@
+DecoderOnlyTransformer(
+  (dec_layers): ModuleList(
+    (0-1): 2 x SelfAttentionDecoderLayer(
+      (self_attn): SelfAttentionLayer(
+        (mha): MultiheadAttention(
+          (out_proj): NonDynamicallyQuantizableLinear(in_features=256, out_features=256, bias=True)
+        )
+        (norm): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+        (dropout): Dropout(p=0.0, inplace=False)
+      )
+      (ffn): FeedForwardLayer(
+        (ffn): Sequential(
+          (0): Linear(in_features=256, out_features=1024, bias=True)
+          (1): GELU(approximate='none')
+          (2): Dropout(p=0.0, inplace=False)
+          (3): Linear(in_features=1024, out_features=256, bias=True)
+        )
+        (norm): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+        (dropout): Dropout(p=0.0, inplace=False)
+      )
+    )
+  )
+  (target_embedding): Embedding(41, 256)
+  (positional_encoding): PositionalEncoding()
+  (final_linear): Linear(in_features=256, out_features=41, bias=True)
+  (dropout): Dropout(p=0.0, inplace=False)
+  (norm): LayerNorm((256,), eps=1e-05, elementwise_affine=True)
+)

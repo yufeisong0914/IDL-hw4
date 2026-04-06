@@ -1,0 +1,143 @@
+
+Name                      : "yufeison-carnegie-mellon-university"
+
+###### Tokenization ------------------------------------------------------------
+tokenization:
+  token_type                : "char"       # [char, 1k, 5k, 10k]
+  token_map :
+      'char': 'hw4lib/data/tokenizer_jsons/tokenizer_char.json'
+      '1k'  : 'hw4lib/data/tokenizer_jsons/tokenizer_1000.json'
+      '5k'  : 'hw4lib/data/tokenizer_jsons/tokenizer_5000.json'
+      '10k' : 'hw4lib/data/tokenizer_jsons/tokenizer_10000.json'
+
+###### Dataset -----------------------------------------------------------------
+data:
+  root                 : "/kaggle/input/s26-11785-hw4-data/hw4p2_data"  # TODO: Set the root path of your data
+  train_partition      : "train-clean-100"
+  val_partition        : "dev-clean"
+  test_partition       : "test-clean"
+  subset_size          : null       # Load a subset of the data (for debugging)
+  batch_size           : 64
+  NUM_WORKERS          : 4          # Set to 0 for CPU
+
+  # Feature config
+  num_feats            : 80         # Number of filterbank features
+
+  # Normalization: 'global_mvn', 'cepstral', 'none'
+  norm                 : "global_mvn"
+
+  # SpecAugment
+  specaug              : True
+  specaug_conf:
+    apply_freq_mask        : True
+    apply_time_mask        : True
+    num_freq_mask          : 2
+    num_time_mask          : 2
+    freq_mask_width_range  : 27     # Max frequency mask width
+    time_mask_width_range  : 100    # Max time mask width
+
+###### Network Specs -----------------------------------------------------------
+model:  # Encoder-Decoder Transformer
+  input_dim            : 80         # Must match data.num_feats
+  time_reduction       : 4          # Temporal downsampling factor
+  reduction_method     : "conv"     # Options: 'conv', 'lstm', 'both'
+
+  # Encoder
+  num_encoder_layers   : 4
+  num_encoder_heads    : 4
+  d_ff_encoder         : 1024
+
+  # Decoder
+  num_decoder_layers   : 2
+  num_decoder_heads    : 4
+  d_ff_decoder         : 1024
+
+  # Shared
+  d_model              : 256
+  dropout              : 0.1
+  weight_tying         : False
+  layer_drop_rate      : 0.0
+  skip_encoder_pe      : False
+  skip_decoder_pe      : False
+
+###### Common Training Parameters -----------------------------------------------
+training:
+  use_wandb                   : False  # Toggle wandb logging
+  wandb_run_id                : "none" # "none" or run_id to resume
+  resume                      : False
+  epochs                      : 30
+  gradient_accumulation_steps : 2
+  wandb_project               : "hw4p2"
+
+###### Loss ---------------------------------------------------------------------
+loss:
+  label_smoothing : 0.1
+  ctc_weight      : 0.1   # Set to 0.0 to disable CTC auxiliary loss
+
+###### Optimizer ----------------------------------------------------------------
+optimizer:
+  name         : "adamw"
+  lr           : 3.0e-4
+  weight_decay : 0.01
+
+  # Parameter groups (leave empty for uniform LR)
+  param_groups : []
+
+  # Layer-wise learning rates
+  layer_decay:
+    enabled    : False
+    decay_rate : 0.75
+
+  # SGD specific
+  sgd:
+    momentum  : 0.9
+    nesterov  : True
+    dampening : 0
+
+  # Adam specific
+  adam:
+    betas   : [0.9, 0.999]
+    eps     : 1.0e-8
+    amsgrad : False
+
+  # AdamW specific
+  adamw:
+    betas   : [0.9, 0.98]
+    eps     : 1.0e-9
+    amsgrad : False
+
+###### Scheduler ----------------------------------------------------------------
+scheduler:
+  name: "cosine"  # Options: reduce_lr, cosine, cosine_warm
+
+  # ReduceLROnPlateau
+  reduce_lr:
+    mode           : "min"
+    factor         : 0.5
+    patience       : 5
+    threshold      : 0.0001
+    threshold_mode : "rel"
+    cooldown       : 2
+    min_lr         : 1.0e-7
+    eps            : 1.0e-8
+
+  # CosineAnnealingLR
+  cosine:
+    T_max      : 30
+    eta_min    : 1.0e-7
+    last_epoch : -1
+
+  # CosineAnnealingWarmRestarts
+  cosine_warm:
+    T_0        : 10
+    T_mult     : 2
+    eta_min    : 1.0e-7
+    last_epoch : -1
+
+  # Warmup (can be used with cosine or cosine_warm)
+  warmup:
+    enabled      : True
+    type         : "linear"
+    epochs       : 3
+    start_factor : 0.1
+    end_factor   : 1.0
