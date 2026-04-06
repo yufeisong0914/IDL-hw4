@@ -198,6 +198,7 @@ class ASRTrainer(BaseTrainer):
         avg_perplexity_token = torch.exp(torch.tensor(avg_ce_loss))
         avg_perplexity_char = torch.exp(torch.tensor(avg_ce_loss / dataloader.dataset.get_avg_chars_per_token()))
         batch_bar.close()
+        import gc; gc.collect(); torch.cuda.empty_cache()
 
         return {
             'ce_loss': avg_ce_loss,
@@ -216,9 +217,14 @@ class ASRTrainer(BaseTrainer):
         Returns:
             Tuple[Dict[str, float], List[Dict[str, Any]]]: Validation metrics and recognition results
         """
+        # Free training memory before inference
+        import gc
+        gc.collect()
+        torch.cuda.empty_cache()
+
         # Run recognition on the validation set (small number of batches for speed)
         val_recognition_config = {
-            'num_batches': None,   # all batches
+            'num_batches': 20,     # limit batches to save memory & time
             'beam_width': 1,       # greedy for validation speed
             'temperature': 1.0,
             'repeat_penalty': 1.0,
