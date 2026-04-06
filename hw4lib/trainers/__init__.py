@@ -5,4 +5,4 @@ try:
 except (ImportError, Exception):
     pass
 
-__all__ = ["BaseTrainer", "LMTrainer", "ASRTrainer", "ProgressiveTrainer"]
+__all__ = ["BaseTrainer", "LMTrainer"]
